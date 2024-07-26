@@ -1,4 +1,6 @@
-# TypeScript
+#PencilRoom_Client
+
+## TypeScript
 * In-build type checking / error checking 
 * Type Initialization 
   * const elem = document.getElementById('id') as ElementType

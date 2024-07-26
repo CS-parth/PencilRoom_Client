@@ -1,7 +1,7 @@
 import React from 'react'
 import { useEffect, useLayoutEffect, useState } from 'react'
 import rough from 'roughjs'
-
+import { useHistory } from './hooks/useHistoryState'
 // All the types for the
 type ElementType = {
   id: number,
@@ -32,9 +32,9 @@ enum Action {
 
 function App() {
   // const [selectedTool,setSelectedTool] = useState("line");
-  const [elements,setElements] = useState<ElementType[]>([]);
+  const [elements,setElements,undo,redo] = useHistory([]);
   const [action,setAction] = useState<Action>(Action.Selecting);
-  const [elementType, setElementType] = useState<"line" | "rectangle" | "circle">("line");
+  const [elementType, setElementType] = useState<"line" | "rectangle">("line");
   const [tool,setTool] = useState<Tools>(Tools.Line);
   const [selectedElement,setSelectedElement] = useState<ElementType|null>();
   const generator = rough.generator();
@@ -79,6 +79,7 @@ function App() {
         return "default";
     }
   };
+
   const distance = (a, b) => Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
 
   const resizedCoordinates = (
@@ -179,7 +180,7 @@ function App() {
 
     const elementsCopy = [...elements];
     elementsCopy[id] = updateElement;
-    setElements(elementsCopy);
+    setElements(elementsCopy, true);
   };
 
   const adjustElementCoordinates = (element: ElementType) => {
@@ -209,7 +210,24 @@ function App() {
         roughCanvas.draw(roughElement);
     });
   },[elements])
-  
+
+  useEffect(() => {
+    const undoRedoFunction = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === "z") {
+        if (event.shiftKey) {
+          redo();
+        } else {
+          undo();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", undoRedoFunction);
+    return () => {
+      document.removeEventListener("keydown", undoRedoFunction);
+    };
+  }, [undo, redo]);
+
   const handleMouseDown = (event:React.MouseEvent<HTMLCanvasElement>) =>{
     // start drawing 
     let { clientX,clientY } = extractClient(event);
@@ -228,6 +246,7 @@ function App() {
         const offsetX = clientX - element.x1;
         const offsetY = clientY - element.y1;
         setSelectedElement({ ...element, offsetX, offsetY });
+        setElements((prevState) => prevState);
         if(element.position == "inside"){
           setAction(Action.Moving);
         }else{
@@ -275,13 +294,13 @@ function App() {
   }
 
   const handeMouseUp = () => {
-    if (action === Action.Drawing || action === Action.Resizing) {
-      if (selectedElement) {
+    if (selectedElement) {
         const index = selectedElement.id;
         const { id, type } = elements[index];
-        const { x1, y1, x2, y2 } = adjustElementCoordinates(elements[index]);
-        updateElement(id, x1, y1, x2, y2, type);
-      }
+        if (action === Action.Drawing || action === Action.Resizing) {
+          const { x1, y1, x2, y2 } = adjustElementCoordinates(elements[index]);
+          updateElement(id, x1, y1, x2, y2, type);
+        }
     }
     setSelectedElement(null);
     setAction(Action.None);
@@ -290,6 +309,7 @@ function App() {
   const handleClearButton = () => {
     setElements([]);
   }
+
   return (
     <div style={{ position: "fixed" }}>
       <label htmlFor="line">Line</label>
@@ -302,7 +322,12 @@ function App() {
       <input type="radio" name='selection' id='selection' checked={tool==Tools.Selection} onChange={()=>setTool(Tools.Selection)}/>            
       
       <button type='button' onClick={handleClearButton}>Clear</button>
-     
+
+      <div style={{ position: "fixed", zIndex: 2, bottom: 0, padding: 10 }}>
+        <button onClick={undo}>Undo</button>
+        <button onClick={redo}>Redo</button>
+      </div>
+      
       <canvas 
           className="fixed"
           id='canvas'  
@@ -315,5 +340,6 @@ function App() {
       </canvas>
     </div>
   )
+
 }
 export default App;

@@ -1,9 +1,10 @@
-import React from 'react'
-import { useEffect, useLayoutEffect, useState } from 'react'
+import React, { act } from 'react'
+import { useEffect, useLayoutEffect, useState,useRef } from 'react'
 import rough from 'roughjs'
 import { useHistory } from './hooks/useHistoryState'
-import { getSvgPathFromStroke } from './utils'
 import getStroke from 'perfect-freehand'
+import "./assets/font.css"
+import parse from 'html-react-parser';
 // All the types for the
 
 type SelectedElementType = ElementType & {
@@ -19,12 +20,13 @@ type ElementType = {
   y1: number,
   x2: number,
   y2: number,
+  type: Tools,
+  text?: String,
   offsetX?: number, // conditional property
   offsetY?: number,
-  type: Tools,
   position?: string | null,
   points?: {x:number,y:number}[];
-  roughElement: any
+  roughElement?: any
 }
 interface ExtendedElementType extends ElementType {
   xOffsets?: number[];
@@ -35,7 +37,8 @@ enum Tools {
   Selection = "selection",
   Line = "line",
   Rectangle = "rectangle",
-  Pencil = "pencil"
+  Pencil = "pencil",
+  Text = "text"
 }
 
 enum Action {
@@ -43,16 +46,25 @@ enum Action {
   Drawing = "drawing",
   Moving = "moving",
   Selecting = "selecting",
-  Resizing = "resizing"
+  Resizing = "resizing",
+  Writing = "writing",
+  Panning = "panning"
 }
 
 function App() {
   // const [selectedTool,setSelectedTool] = useState("line");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [elements,setElements,undo,redo] = useHistory([]);
   const [action,setAction] = useState<Action>(Action.Selecting);
-  const [tool,setTool] = useState<Tools>(Tools.Line);
+  const [tool,setTool] = useState<Tools>(Tools.Selection);
   const [selectedElement,setSelectedElement] = useState<SelectedElementType|null>();
+  const [panOffset,setPanOffSet] = useState({x:50,y:50});
+  const [startPanMousePosition,setStartMousePosition] = useState({x:0,y:0});
+  const [scale,setScale] = useState(1);
+  const [scaleOffset,setScaleOffset] = useState({x:0,y:0});
+
   const generator = rough.generator();
+  
   const createElement = (
     id: number,
     x1: number,
@@ -83,6 +95,8 @@ function App() {
           roughElement: defaultRoughElement,
         };
       }
+      case Tools.Text:
+        return { id, type, x1, y1, x2, y2, text: "" };
       default:
         throw new Error(`Type not recognised: ${type}`);
     }
@@ -91,9 +105,9 @@ function App() {
   const extractClient = (event:React.MouseEvent<HTMLCanvasElement>)=>{
       let {clientX,clientY} = event;
       const canvas = document.getElementById('canvas') as HTMLCanvasElement;
-      var boundingRect = canvas.getBoundingClientRect();
-      clientX = clientX-boundingRect.left;
-      clientY = clientY-boundingRect.top;
+      // var boundingRect = canvas.getBoundingClientRect();
+      clientX = (clientX-panOffset.x * scale + scaleOffset.x)/scale;
+      clientY = (clientY-panOffset.y * scale + scaleOffset.y)/scale;
       return {clientX,clientY};
   }
 
@@ -202,6 +216,8 @@ function App() {
         });
         return betweenAnyPoint ? "inside" : null;
         // break;
+      case Tools.Text:
+        return x >= x1 && x <= x2 && y >= y1 && y <= y2 ? "inside" : null;
       default:
         throw new Error(`Invalid type provided ${type}`);
         // break;
@@ -223,7 +239,8 @@ function App() {
     y1: number,
     x2: number,
     y2: number,
-    type: Tools
+    type: Tools,
+    options?: { text: string }
   ) => {
     switch (type) {
       case Tools.Line:
@@ -239,6 +256,29 @@ function App() {
         const elementsCopy = [...elements];
         elementsCopy[id].points = [...existingPoints,{x:x2,y:y2}];
         // console.log(elements[id].points);
+        setElements(elementsCopy, true);
+        break;
+      }
+      case Tools.Text: {
+        const canvas = document.getElementById("canvas");
+        if (!(canvas instanceof HTMLCanvasElement)) {
+          throw new Error("Canvas element not found");
+        }
+        const context = canvas.getContext("2d");
+        if (!context) {
+          throw new Error("Could not get 2D context from canvas");
+        }
+        if (!options) {
+          throw new Error("No text options provided for text tool");
+        }
+        const textWidth = context.measureText(options.text).width;
+        const textHeight = 24;
+        const elementsCopy = [...elements];
+        console.log("Op",options);
+        elementsCopy[id] = {
+          ...createElement(id, x1, y1, x1 + textWidth, y1 + textHeight, type),
+          text: options.text,
+        };
         setElements(elementsCopy, true);
         break;
       }
@@ -296,6 +336,7 @@ function App() {
 
     return result
   }
+
   const drawElement = (roughCanvas:any,context:CanvasRenderingContext2D,element:ElementType) => {
     switch (element.type) {
       case Tools.Line:
@@ -309,19 +350,42 @@ function App() {
         const myPath = new Path2D(pathData);
         context.fill(myPath);
         break;
+      case Tools.Text:
+        console.log("Got text");
+        context.textBaseline = "top";
+        context.font = "24px 'Pacifico', cursive";
+        const text = element.text || "";
+        console.log(text);
+        context.fillText(text,element.x1,element.y1);
+        break;
       default:
         throw new Error(`Type not recognised: ${element.type}`);
     }
   }
+
   useLayoutEffect(() => {
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
     const context = canvas.getContext("2d") as CanvasRenderingContext2D;
     context.clearRect(0, 0, canvas.width, canvas.height);
+    const scaledWidth = canvas.width * scale;
+    const scaledHeight = canvas.height * scale;
 
+    const scaleOffsetX = (scaledWidth - canvasWidth) / 2;
+    const scaleOffsetY = (scaledHeight - canvasHeight) / 2;
+
+    setScaleOffset({x:scaleOffsetX,y:scaleOffsetY});
+
+    context.save();
+    context.translate(panOffset.x*scale - scaleOffsetX,panOffset.y*scale - scaleOffsetY);
+    context.scale(scale,scale);
     const roughCanvas = rough.canvas(canvas);
-
-    elements.forEach((element) => drawElement(roughCanvas, context, element));
-  }, [elements]);
+    elements.forEach((element) => {
+      if(action == "writing" && selectedElement && (selectedElement.id === element.id)) return;
+      console.log("Indise", element);
+      drawElement(roughCanvas, context, element)
+    });
+    context.restore();
+  }, [elements,action,selectedElement,panOffset,scale]);
 
   useEffect(() => {
     const undoRedoFunction = (event: KeyboardEvent) => {
@@ -340,9 +404,41 @@ function App() {
     };
   }, [undo, redo]);
 
+  useEffect(() => {
+    const textArea = textareaRef.current;
+    if (action === "writing" && textArea && selectedElement) {
+      setTimeout(() => {
+        textArea.focus();
+        textArea.value = selectedElement.text || "";
+      }, 0); // Waiting for the DOM to render textarea after re-render
+    }
+  }, [action, selectedElement]);
+
+  useEffect(()=>{
+    const panFunction = (event) => {
+      console.log(event);
+      setPanOffSet(prevState => ({
+        x: prevState.x - event.deltaX,
+        y: prevState.y - event.deltaY
+      }))
+    }
+    document.addEventListener("wheel",panFunction);
+    return ()=>{
+      document.removeEventListener("wheel",panFunction);
+    }
+  },[])
+
   const handleMouseDown = (event:React.MouseEvent<HTMLCanvasElement>) =>{
     // start drawing 
+    if(action == Action.Writing) return;
     let { clientX,clientY } = extractClient(event);
+
+    if(event.button == 1){ // Wheeler button
+      // panning 
+      setAction(Action.Panning);
+      setStartMousePosition({x:clientX,y:clientY});
+      return;
+    }
     if(tool != Tools.Selection){
       const id = elements.length;
       const newElement = createElement(id,clientX,clientY,clientX,clientY,tool);
@@ -354,7 +450,12 @@ function App() {
         newElement
       ])); // overwrite is tured off while creating the initial point for the next shape
       setSelectedElement(newElement); 
-      setAction(Action.Drawing);
+      console.log(tool);
+      if(tool == Tools.Text){
+        setAction(Action.Writing);
+      }else{
+        setAction(Action.Drawing);
+      }
     }else if(tool == Tools.Selection){
       const element = getElementAtPosition(clientX, clientY, elements);
       if (element) {
@@ -386,6 +487,16 @@ function App() {
 
   const handleMouseMove = (event:React.MouseEvent<HTMLCanvasElement>) => {
     let { clientX,clientY } = extractClient(event);
+    console.log(action);
+    if(action == Action.Panning){
+      const deltaX = clientX + panOffset.x - startPanMousePosition.x;
+      const deltaY = clientY + panOffset.y - startPanMousePosition.y;
+      setPanOffSet((prevState)=>({
+        x: deltaX,
+        y: deltaY
+      }))
+      return;
+    }
     if(tool == Tools.Selection){
       const element = getElementAtPosition(clientX,clientY,elements);
       // console.log(element)
@@ -435,54 +546,125 @@ function App() {
     }
   }
 
-  const handeMouseUp = () => {
-    if (selectedElement) {
-        console.log(selectedElement);
+  const handleMouseUp = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    const { clientX, clientY } = event;
+    if(action == Action.Panning){
+      setAction(Action.None);
+      return;
+    }
+      if (selectedElement) {
         const index = selectedElement.id;
         const { id, type } = elements[index];
-        if (action === Action.Drawing || action === Action.Resizing && selectedElement.type!=Tools.Pencil)
-         {
-          const { x1, y1, x2, y2 } = adjustElementCoordinates(elements[index]);
-          updateElement(id, x1, y1, x2, y2, type);
-        }
+        const { x1, y1, x2, y2 } = adjustElementCoordinates(elements[index]);
+        updateElement(id, x1, y1, x2, y2, type);
+      }
+
+      const offsetX = selectedElement.offsetX || 0;
+      const offsetY = selectedElement.offsetY || 0;
+
+      if (
+        selectedElement.type === "text" &&
+        clientX - offsetX === selectedElement.x1 &&
+        clientY - offsetY === selectedElement.y1
+      ) {
+        setAction(Action.Writing);
+        return;
+      }
+    // }
+
+    if (action === "writing") {
+      return;
     }
-    setSelectedElement(null);
     setAction(Action.None);
-  }
+    setSelectedElement(null);
+  };
+
+  const handleBlur = (event: React.FocusEvent<HTMLTextAreaElement>) => {
+    if (selectedElement) {
+      const { id, x1, y1, type } = selectedElement;
+      console.log(id);
+      const x2 = selectedElement.x2 || x1;
+      const y2 = selectedElement.y2 || y1;
+
+      setAction(Action.None);
+      setSelectedElement(null);
+      // console.log("e", event.target);
+      updateElement(id, x1, y1, x2, y2, type, { text: event.target.value});
+      console.log(elements);
+    } else {
+      console.error("No element selected when handleBlur was called");
+    }
+  };
 
   const handleClearButton = () => {
     setElements([]);
+  } 
+  
+  const [canvasHeight,setCanvasHeight] = useState(window.innerHeight);
+  const [canvasWidth,setCanvasWidth] = useState(window.innerWidth);
+
+  const onZoom = (val) => {
+    setScale(prevState => Math.min(Math.max(prevState + val,0.1),2));
   }
 
-  return (
+  return (  
     <div style={{ position: "fixed" }}>
-      
-      <label htmlFor="pencil">Pencil</label>
-      <input type="radio" name='pencil' id='pencil' checked={tool==Tools.Pencil} onChange={()=>setTool(Tools.Pencil)}/>
+      <div className="fixed z-20">
+        <label htmlFor="text">Text</label>
+        <input type="radio" name='text' id='text' checked={tool==Tools.Text} onChange={()=>setTool(Tools.Text)}/>
+        
+        <label htmlFor="pencil">Pencil</label>
+        <input type="radio" name='pencil' id='pencil' checked={tool==Tools.Pencil} onChange={()=>setTool(Tools.Pencil)}/>
 
-      <label htmlFor="line">Line</label>
-      <input type="radio" name='line' id='line' checked={tool==Tools.Line} onChange={()=>setTool(Tools.Line)}/>
-      
-      <label htmlFor="reactangle">Reactangle</label>
-      <input type="radio" name='reactangle' id='reactangle' checked={tool==Tools.Rectangle} onChange={()=>setTool(Tools.Rectangle)}/>
-      
-      <label htmlFor="selection">Selection</label>
-      <input type="radio" name='selection' id='selection' checked={tool==Tools.Selection} onChange={()=>setTool(Tools.Selection)}/>            
-      
-      <button type='button' onClick={handleClearButton}>Clear</button>
+        <label htmlFor="line">Line</label>
+        <input type="radio" name='line' id='line' checked={tool==Tools.Line} onChange={()=>setTool(Tools.Line)}/>
+        
+        <label htmlFor="reactangle">Reactangle</label>
+        <input type="radio" name='reactangle' id='reactangle' checked={tool==Tools.Rectangle} onChange={()=>setTool(Tools.Rectangle)}/>
+        
+        <label htmlFor="selection">Selection</label>
+        <input type="radio" name='selection' id='selection' checked={tool==Tools.Selection} onChange={()=>setTool(Tools.Selection)}/>            
+        
+        <button type='button' onClick={handleClearButton}>Clear</button>
+      </div>
 
       <div style={{ position: "fixed", zIndex: 2, bottom: 0, padding: 10 }}>
+        <button onClick={()=>onZoom(-0.1)}>-</button>
+        <span onClick={()=>setScale(1)}>{new Intl.NumberFormat("en-GB",{style:"percent"}).format(scale)}</span>
+        <button onClick={()=>onZoom(+0.1)}>+</button>
+        <span></span>
         <button onClick={undo}>Undo</button>
         <button onClick={redo}>Redo</button>
       </div>
       
+      {action == Action.Writing ? (
+        <textarea 
+            ref={textareaRef}
+            name='text'
+            style={{
+              position: "fixed",
+              top: (selectedElement && selectedElement.y1) ? `${selectedElement.y1 * scale + panOffset.x * scale - scaleOffset.x}px` : '0',
+              left: (selectedElement && selectedElement.x1) ? `${selectedElement.x1 * scale + panOffset.y * scale - scaleOffset.y}px` : '0',
+              font: `${24*scale}px 'Pacifico', cursive`,
+              margin: 0,
+              padding: 0,
+              border: 0,
+              outline: "none",
+              overflow: "hidden",
+              whiteSpace: "pre-wrap",
+              background: "transparent",
+              zIndex: 0,
+            }}
+            onBlur={handleBlur}
+        />
+      ) : null}
       <canvas 
-          className="fixed"
+          className="absolute"
           id='canvas'  
           width={window.innerWidth}
           height={window.innerHeight}
           onMouseDown={handleMouseDown}
-          onMouseUp={handeMouseUp}
+          onMouseUp={handleMouseUp}
           onMouseMove={handleMouseMove}
       >
       </canvas>

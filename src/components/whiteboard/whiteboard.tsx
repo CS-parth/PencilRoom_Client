@@ -4,61 +4,17 @@ import rough from 'roughjs'
 import { useHistory } from '../../hooks/useHistoryState'
 import getStroke from 'perfect-freehand'
 import "../../assets/font.css"
-import parse from 'html-react-parser';
-// All the types for the
-
-type SelectedElementType = ElementType & {
-  xOffsets?: number[];
-  yOffsets?: number[]; // For pencil
-  offsetX?: number; // For Others 
-  offsetY?: number;
-};
-
-type ElementType = {
-  id: number,
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number,
-  type: Tools,
-  text?: String,
-  offsetX?: number, // conditional property
-  offsetY?: number,
-  position?: string | null,
-  points?: {x:number,y:number}[];
-  roughElement?: any
-}
-interface ExtendedElementType extends ElementType {
-  xOffsets?: number[];
-  yOffsets?: number[];
-}
-
-enum Tools {
-  Selection = "selection",
-  Line = "line",
-  Rectangle = "rectangle",
-  Pencil = "pencil",
-  Text = "text"
-}
-
-enum Action {
-  None = "none",
-  Drawing = "drawing",
-  Moving = "moving",
-  Selecting = "selecting",
-  Resizing = "resizing",
-  Writing = "writing",
-  Panning = "panning"
-}
+// All the types for the whiteBoard
+import { SelectedElementType,ElementType,ExtendedElementType,Tools,Action } from '../../types'
 
 function WhiteBoard() {
   // const [selectedTool,setSelectedTool] = useState("line");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [elements,setElements,undo,redo] = useHistory([]);
-  const [action,setAction] = useState<Action>(Action.Selecting);
-  const [tool,setTool] = useState<Tools>(Tools.Selection);
+  const [elements,setElements,undo,redo] = useHistory(JSON.parse(localStorage.getItem("pencilRoom")) || []);
+  const [action,setAction] = useState<Action>(localStorage.getItem("pencilRoom_Action") || Action.Selecting);
+  const [tool,setTool] = useState<Tools>(localStorage.getItem("pencilRoom_Tool") || Tools.Selection);
   const [selectedElement,setSelectedElement] = useState<SelectedElementType|null>();
-  const [panOffset,setPanOffSet] = useState({x:50,y:50});
+  const [panOffset,setPanOffSet] = useState(JSON.parse(localStorage.getItem("pencilRoom_panOffSet"))|| {x:0,y:0});
   const [startPanMousePosition,setStartMousePosition] = useState({x:0,y:0});
   const [scale,setScale] = useState(1);
   const [scaleOffset,setScaleOffset] = useState({x:0,y:0});
@@ -104,8 +60,6 @@ function WhiteBoard() {
 
   const extractClient = (event:React.MouseEvent<HTMLCanvasElement>)=>{
       let {clientX,clientY} = event;
-      const canvas = document.getElementById('canvas') as HTMLCanvasElement;
-      // var boundingRect = canvas.getBoundingClientRect();
       clientX = (clientX-panOffset.x * scale + scaleOffset.x)/scale;
       clientY = (clientY-panOffset.y * scale + scaleOffset.y)/scale;
       return {clientX,clientY};
@@ -248,13 +202,15 @@ function WhiteBoard() {
         const updatedElement = createElement(id, x1, y1, x2, y2, type);
         const elementsCopy = [...elements];
         elementsCopy[id] = updatedElement;
-        setElements(elementsCopy, true);
+        localStorage.setItem('pencilRoom',JSON.stringify(elementsCopy));
+        setElements(elementsCopy, true); // overwrite is true means current history will be used
         break;
       }
       case Tools.Pencil: {
         const existingPoints = elements[id].points || [];
         const elementsCopy = [...elements];
         elementsCopy[id].points = [...existingPoints,{x:x2,y:y2}];
+        localStorage.setItem('pencilRoom',JSON.stringify(elementsCopy));
         setElements(elementsCopy, true);
         break;
       }
@@ -277,6 +233,7 @@ function WhiteBoard() {
           ...createElement(id, x1, y1, x1 + textWidth, y1 + textHeight, type),
           text: options.text,
         };
+        localStorage.setItem('pencilRoom',JSON.stringify(elementsCopy));
         setElements(elementsCopy, true);
         break;
       }
@@ -360,6 +317,7 @@ function WhiteBoard() {
   }
 
   useLayoutEffect(() => {
+    // const localElements = JSON.parse(localStorage.getItem('pencilRoom'));
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
     const context = canvas.getContext("2d") as CanvasRenderingContext2D;
     context.clearRect(0, 0, canvas.width, canvas.height);
@@ -411,6 +369,7 @@ function WhiteBoard() {
 
   useEffect(()=>{
     const panFunction = (event) => {
+      localStorage.setItem("pencilRoom_panOffSet",JSON.stringify({x:panOffset.x-event.deltaX,y:panOffset.y-event.deltaY}))
       setPanOffSet(prevState => ({
         x: prevState.x - event.deltaX,
         y: prevState.y - event.deltaY
@@ -429,6 +388,7 @@ function WhiteBoard() {
 
     if(event.button == 1){ // Wheeler button
       // panning 
+      localStorage.setItem("pencilRoom_Action",Action.Panning);
       setAction(Action.Panning);
       setStartMousePosition({x:clientX,y:clientY});
       return;
@@ -436,14 +396,15 @@ function WhiteBoard() {
     if(tool != Tools.Selection){
       const id = elements.length;
       const newElement = createElement(id,clientX,clientY,clientX,clientY,tool);
-      setElements((prevState)=>([
-        ...prevState,
-        newElement
-      ])); // overwrite is tured off while creating the initial point for the next shape
+      const elementsCopy = [...elements,newElement];
+      localStorage.setItem('pencilRoom',JSON.stringify(elementsCopy));
+      setElements(elementsCopy); // overwrite is tured off while creating the initial point for the next shape
       setSelectedElement(newElement); 
       if(tool == Tools.Text){
+        localStorage.setItem("pencilRoom_Action",Action.Writing);
         setAction(Action.Writing);
       }else{
+        localStorage.setItem("pencilRoom_Action",Action.Drawing);
         setAction(Action.Drawing);
       }
     }else if(tool == Tools.Selection){
@@ -460,10 +421,13 @@ function WhiteBoard() {
           const offsetY = clientY - element.y1;
           setSelectedElement({ ...selectedElement, offsetX, offsetY });
         }
+        localStorage.setItem('pencilRoom',JSON.stringify(elements));
         setElements((prevState) => prevState); // No OverWrite means creating a copy of the current history before moving the elemnt so as to get the undo/Redo functionalites working on the Moving part and the resizing part as well
         if(element.position == "inside"){
+          localStorage.setItem("pencilRoom_Action",Action.Moving);
           setAction(Action.Moving);
         }else{
+          localStorage.setItem("pencilRoom_Action",Action.Resizing);
           setAction(Action.Resizing);
         }
       }
@@ -475,6 +439,7 @@ function WhiteBoard() {
     if(action == Action.Panning){
       const deltaX = clientX + panOffset.x - startPanMousePosition.x;
       const deltaY = clientY + panOffset.y - startPanMousePosition.y;
+      localStorage.setItem("pencilRoom_panOffSet",JSON.stringify({x:deltaX,y:deltaY}));
       setPanOffSet((prevState)=>({
         x: deltaX,
         y: deltaY
@@ -505,6 +470,7 @@ function WhiteBoard() {
           ...elementCopy[selectedElement.id],
           points: newPoints
         }
+        localStorage.setItem('pencilRoom',JSON.stringify(elementCopy));
         setElements(elementCopy,true); // As we are moving we do not want to create a history for this so overwite = true
       }else{
         const { id, x1, x2, y1, y2, type, offsetX, offsetY } = selectedElement;
@@ -547,6 +513,7 @@ function WhiteBoard() {
         clientX - offsetX === selectedElement.x1 &&
         clientY - offsetY === selectedElement.y1
       ) {
+        localStorage.setItem("pencilRoom_Action",Action.Writing);
         setAction(Action.Writing);
         return;
       }
@@ -557,6 +524,7 @@ function WhiteBoard() {
     if (action === Action.Panning) {
       document.body.style.cursor = "default";
     }
+    localStorage.setItem("pencilRoom_Action",Action.None);
     setAction(Action.None);
     setSelectedElement(null);
   };
@@ -566,7 +534,7 @@ function WhiteBoard() {
       const { id, x1, y1, type } = selectedElement;
       const x2 = selectedElement.x2 || x1;
       const y2 = selectedElement.y2 || y1;
-
+      localStorage.setItem("pencilRoom_Action",Action.None);
       setAction(Action.None);
       setSelectedElement(null);
       updateElement(id, x1, y1, x2, y2, type, { text: event.target.value});
@@ -576,6 +544,7 @@ function WhiteBoard() {
   };
 
   const handleClearButton = () => {
+    localStorage.setItem('pencilRoom',JSON.stringify([]));
     setElements([]);
   } 
   
@@ -590,19 +559,34 @@ function WhiteBoard() {
     <div style={{ position: "fixed" }}>
       <div className="fixed z-20">
         <label htmlFor="text">Text</label>
-        <input type="radio" name='text' id='text' checked={tool==Tools.Text} onChange={()=>setTool(Tools.Text)}/>
+        <input type="radio" name='text' id='text' checked={tool==Tools.Text} 
+        onChange={()=>{
+          localStorage.setItem("pencilRoom_Tool",Tools.Text)
+          setTool(Tools.Text)}}/>
         
         <label htmlFor="pencil">Pencil</label>
-        <input type="radio" name='pencil' id='pencil' checked={tool==Tools.Pencil} onChange={()=>setTool(Tools.Pencil)}/>
+        <input type="radio" name='pencil' id='pencil' checked={tool==Tools.Pencil} 
+        onChange={()=>{
+          localStorage.setItem("pencilRoom_Tool",Tools.Pencil)
+          setTool(Tools.Pencil)}}/>
 
         <label htmlFor="line">Line</label>
-        <input type="radio" name='line' id='line' checked={tool==Tools.Line} onChange={()=>setTool(Tools.Line)}/>
+        <input type="radio" name='line' id='line' checked={tool==Tools.Line} 
+        onChange={()=>{
+          localStorage.setItem("pencilRoom_Tool",Tools.Line)
+          setTool(Tools.Line)}}/>
         
         <label htmlFor="reactangle">Reactangle</label>
-        <input type="radio" name='reactangle' id='reactangle' checked={tool==Tools.Rectangle} onChange={()=>setTool(Tools.Rectangle)}/>
+        <input type="radio" name='reactangle' id='reactangle' checked={tool==Tools.Rectangle} 
+        onChange={()=>{
+          localStorage.setItem("pencilRoom_Tool",Tools.Rectangle);
+          setTool(Tools.Rectangle)}}/>
         
         <label htmlFor="selection">Selection</label>
-        <input type="radio" name='selection' id='selection' checked={tool==Tools.Selection} onChange={()=>setTool(Tools.Selection)}/>            
+        <input type="radio" name='selection' id='selection' checked={tool==Tools.Selection} 
+        onChange={()=>{
+          localStorage.setItem("pencilRoom_Tool",Tools.Selection);
+          setTool(Tools.Selection)}}/>            
         
         <button type='button' onClick={handleClearButton}>Clear</button>
       </div>

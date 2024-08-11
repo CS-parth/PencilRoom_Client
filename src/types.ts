@@ -12,7 +12,7 @@
     x2: number,
     y2: number,
     type: Tools,
-    text?: String,
+    text?: string ,
     offsetX?: number, // conditional property
     offsetY?: number,
     position?: string | null,

@@ -1,7 +1,7 @@
-import React, { act } from 'react'
+import React from 'react'
 import { useEffect, useLayoutEffect, useState,useRef } from 'react'
 import rough from 'roughjs'
-import { useHistory, useHistoryStore } from '../../hooks/useHistoryState'
+import { useHistoryStore } from '../../hooks/useHistoryStore'
 import getStroke from 'perfect-freehand'
 import "../../assets/font.css"
 import { useToolsStore } from '../../hooks/useToolsStore'
@@ -21,16 +21,12 @@ type ElementType = {
   x2: number,
   y2: number,
   type: Tools,
-  text?: String,
+  text?: string,
   offsetX?: number, // conditional property
   offsetY?: number,
   position?: string | null,
   points?: {x:number,y:number}[];
   roughElement?: any
-}
-interface ExtendedElementType extends ElementType {
-  xOffsets?: number[];
-  yOffsets?: number[];
 }
 
 enum Tools {
@@ -115,7 +111,7 @@ function WhiteBoard() {
 
   const extractClient = (event:React.MouseEvent<HTMLCanvasElement>)=>{
       let {clientX,clientY} = event;
-      const canvas = document.getElementById('canvas') as HTMLCanvasElement;
+      // const canvas = document.getElementById('canvas') as HTMLCanvasElement;
       // var boundingRect = canvas.getBoundingClientRect();
       clientX = (clientX-panOffset.x * scale + scaleOffset.x)/scale;
       clientY = (clientY-panOffset.y * scale + scaleOffset.y)/scale;
@@ -140,7 +136,8 @@ function WhiteBoard() {
     }
   };
 
-  const distance = (a, b) => Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
+  const distance = (a: { x: number; y: number }, b: { x: number; y: number }): number =>
+  Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
 
   const resizedCoordinates = (
     clientX:number,
@@ -311,9 +308,10 @@ function WhiteBoard() {
       }
     }
   };
-  const average = (a, b) => (a + b) / 2
+  
+  const average = (a: number, b: number): number => (a + b) / 2;
 
-  const getSvgPathFromStroke = (points, closed = true) => {
+  const getSvgPathFromStroke = (points: { x: number; y: number }[], closed: boolean = true): string => {
     const len = points.length
 
     if (len < 4) {
@@ -422,7 +420,7 @@ function WhiteBoard() {
   }, [action, selectedElement]);
 
   useEffect(()=>{
-    const panFunction = (event) => {
+    const panFunction = (event: React.MouseEvent<HTMLCanvasElement>): void => {
       setPanOffSet(prevState => ({
         x: prevState.x - event.deltaX,
         y: prevState.y - event.deltaY
@@ -595,7 +593,7 @@ function WhiteBoard() {
   const [canvasHeight,setCanvasHeight] = useState(window.innerHeight);
   const [canvasWidth,setCanvasWidth] = useState(window.innerWidth);
 
-  const onZoom = (val) => {
+  const onZoom = (val:number) => {
     setScale(prevState => Math.min(Math.max(prevState + val,0.1),2));
   }
 

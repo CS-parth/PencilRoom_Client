@@ -20,17 +20,17 @@ const initialState = {
 };
 
 export const useToolsStore = create<ToolsState & Actions>()(
-    persist(
+    // persist(
         (set) => ({
             ...initialState,
             setTool: (tool: Tools) => set(()=>({tool: tool})),
             setAction: (action: Action) => set(() => ({action: action})),
             resetTools: () => set(()=>({tool:Tools.Selection,action:Action.Selecting})),
-        }),
-        {
-            name: "pencilRoom_tools",
-        }
-    )
+        })
+    //     {
+    //         name: "pencilRoom_tools",
+    //     }
+    // // )
 );
 
 // export const useToolsState = () => {

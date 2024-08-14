@@ -597,67 +597,134 @@ function WhiteBoard() {
     setScale(prevState => Math.min(Math.max(prevState + val,0.1),2));
   }
 
-  return (  
-    <div style={{ position: "fixed" }}>
-      <div className="fixed z-20">
-        <label htmlFor="text">Text</label>
-        <input type="radio" name='text' id='text' checked={tool==Tools.Text} onChange={()=>setTool(Tools.Text)}/>
-
-        <label htmlFor="pencil">Pencil</label>
-        <input type="radio" name='pencil' id='pencil' checked={tool==Tools.Pencil} onChange={()=>setTool(Tools.Pencil)}/>
-
-        <label htmlFor="line">Line</label>
-        <input type="radio" name='line' id='line' checked={tool==Tools.Line} onChange={()=>setTool(Tools.Line)}/>
-
-        <label htmlFor="reactangle">Reactangle</label>
-        <input type="radio" name='reactangle' id='reactangle' checked={tool==Tools.Rectangle} onChange={()=>setTool(Tools.Rectangle)}/>
-
-        <label htmlFor="selection">Selection</label>
-        <input type="radio" name='selection' id='selection' checked={tool==Tools.Selection} onChange={()=>setTool(Tools.Selection)}/>            
-
-        <button type='button' onClick={handleClearButton}>Clear</button>
+  return (
+    <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
+      
+      <div className="actions" style={{
+        position: "fixed",
+        top: 0,
+        left: 10,
+        display: "flex",
+        gap: "10px",
+        padding: "10px",
+        background: "#f5f5f5", 
+        borderRadius: '0 0 8px 8px',
+        boxShadow: '0 1px 5px rgba(0,0,0,0.1)',
+        zIndex: 20 
+      }}>
+        <button onClick={handleClearButton}>Clear</button>
       </div>
 
-      <div style={{ position: "fixed", zIndex: 2, bottom: 0, padding: 10 }}>
-        <button onClick={()=>onZoom(-0.1)}>-</button>
-        <span onClick={()=>setScale(1)}>{new Intl.NumberFormat("en-GB",{style:"percent"}).format(scale)}</span>
-        <button onClick={()=>onZoom(+0.1)}>+</button>
-        <span></span>
-        <button onClick={undo}>Undo</button>
-        <button onClick={redo}>Redo</button>
+      <div className="toolbar gap-4" style={{ 
+        position: "fixed", 
+        top: 0, 
+        left: '50%', 
+        transform: 'translateX(-50%)', 
+        padding: "10px", 
+        display: "flex", 
+        justifyContent: "center", 
+        alignItems: "center", 
+        background: "#f5f5f5", 
+        borderRadius: '0 0 8px 8px',
+        boxShadow: '0 1px 5px rgba(0,0,0,0.1)',
+        zIndex: 20 
+      }}>
+        <button className={`tool-button ${tool === Tools.Selection ? 'active' : ''}`} onClick={() => setTool(Tools.Selection)}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"></path>
+          </svg>
+        </button>
+        <button className={`tool-button ${tool === Tools.Rectangle ? 'active' : ''}`} onClick={() => setTool(Tools.Rectangle)}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          </svg>
+        </button>
+        <button className={`tool-button ${tool === Tools.Line ? 'active' : ''}`} onClick={() => setTool(Tools.Line)}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>
+        <button className={`tool-button ${tool === Tools.Pencil ? 'active' : ''}`} onClick={() => setTool(Tools.Pencil)}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+          </svg>
+        </button>
+        <button className={`tool-button ${tool === Tools.Text ? 'active' : ''}`} onClick={() => setTool(Tools.Text)}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="4 7 4 4 20 4 20 7"></polyline>
+            <line x1="9" y1="20" x2="15" y2="20"></line>
+            <line x1="12" y1="4" x2="12" y2="20"></line>
+          </svg>
+        </button>
       </div>
 
-      {action == Action.Writing ? (
-        <textarea 
-            ref={textareaRef}
-            name='text'
-            style={{
-              position: "fixed",
-              top: (selectedElement && selectedElement.y1) ? `${selectedElement.y1 * scale + panOffset.x * scale - scaleOffset.x}px` : '0',
-              left: (selectedElement && selectedElement.x1) ? `${selectedElement.x1 * scale + panOffset.y * scale - scaleOffset.y}px` : '0',
-              font: `${24*scale}px 'Pacifico', cursive`,
-              margin: 0,
-              padding: 0,
-              border: 0,
-              outline: "none",
-              overflow: "hidden",
-              whiteSpace: "pre-wrap",
-              background: "transparent",
-              zIndex: 0,
-            }}
-            onBlur={handleBlur}
+  
+      <div className="bottom-left-controls gap-8" style={{ 
+        position: "fixed", 
+        bottom: 10, 
+        left: 10, 
+        display: "flex", 
+        alignItems: "center", 
+        background: "#f5f5f5", 
+        borderRadius: '8px',
+        padding: '5px',
+        boxShadow: '0 1px 5px rgba(0,0,0,0.1)',
+        zIndex: 20 
+      }}>
+        <div className='flex gap-4'>
+          <button onClick={undo}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="1 4 1 10 7 10"></polyline>
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+            </svg>
+          </button>
+          <button onClick={redo}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+            </svg>
+          </button>
+        </div>
+        <div>
+          <button onClick={() => onZoom(-0.1)}>-</button>
+          <span onClick={() => setScale(1)} style={{ margin: "0 10px", cursor: "pointer" }}>
+            {new Intl.NumberFormat("en-GB", { style: "percent" }).format(scale)}
+          </span>
+          <button onClick={() => onZoom(0.1)}>+</button>
+        </div>
+      </div>
+  
+      {action === Action.Writing && (
+        <textarea
+          ref={textareaRef}
+          name="text"
+          style={{
+            position: "fixed",
+            top: selectedElement?.y1 ? `${selectedElement.y1 * scale + panOffset.x * scale - scaleOffset.x}px` : '0',
+            left: selectedElement?.x1 ? `${selectedElement.x1 * scale + panOffset.y * scale - scaleOffset.y}px` : '0',
+            font: `${24 * scale}px sans-serif`,
+            margin: 0,
+            padding: 0,
+            border: 0,
+            outline: "none",
+            overflow: "hidden",
+            whiteSpace: "pre-wrap",
+            background: "transparent",
+            zIndex: 30,
+          }}
+          onBlur={handleBlur}
         />
-      ) : null}
-      <canvas 
-          className="absolute"
-          id='canvas'  
-          width={window.innerWidth}
-          height={window.innerHeight}
-          onMouseDown={handleMouseDown}
-          onMouseUp={handleMouseUp}
-          onMouseMove={handleMouseMove}
-      >
-      </canvas>
+      )}
+      
+      <canvas
+        id="canvas"
+        width={window.innerWidth}
+        height={window.innerHeight}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onMouseMove={handleMouseMove}
+        style={{ position: "absolute", top: 0, left: 0, zIndex: 10 }}
+      />
     </div>
   )
 

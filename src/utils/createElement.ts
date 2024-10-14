@@ -1,4 +1,4 @@
-import { Tools,ElementType } from "../types";
+import { Tools,ElementType } from "../interfaces/whiteboard";
 import rough from 'roughjs'
 
 const generator = rough.generator();

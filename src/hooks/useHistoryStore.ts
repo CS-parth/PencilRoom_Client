@@ -1,4 +1,4 @@
-import { ElementType } from "../types";
+import { ElementType } from "../interfaces/whiteboard";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 

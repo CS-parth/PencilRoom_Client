@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import { Tools, Action } from "../types";
+import { Tools, Action } from "../interfaces/whiteboard";
 
 type ToolsState = {
     tool: Tools;

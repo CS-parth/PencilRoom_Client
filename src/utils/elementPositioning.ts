@@ -1,5 +1,5 @@
 import { nearPoint,distance } from "./math";
-import { Tools,ElementType } from "../types";
+import { Tools,ElementType } from "../interfaces/whiteboard";
 
 export const positionWithElement = (x: number, y: number, element: ElementType) => {
     const { type, x1, y1, x2, y2 } = element;

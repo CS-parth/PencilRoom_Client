@@ -5,13 +5,30 @@ import { useHistoryStore } from '../../hooks/useHistoryStore'
 import "../../assets/font.css"
 import { useToolsStore } from '../../hooks/useToolsStore'
 import { adjustElementCoordinates } from '../../utils/math'
-import { SelectedElementType,Tools,Action } from '../../types'
+import { Tools,Action,SelectedElementType } from '../../interfaces/whiteboard'
 import { drawElement } from '../../utils/drawElement'
 import { createElement } from '../../utils/createElement'
 import { getElementAtPosition,extractPosition } from '../../utils/elementPositioning'
 import { resizedCoordinates } from '../../utils/resizedCoordinates'
+import useClassStore from '../../store/classStore'
+import { useNavigate } from 'react-router-dom'
 
-function WhiteBoard() {
+function WhiteBoard({roomId,socketId}) {
+  const navigate = useNavigate();
+
+  const [room,createRoom,user,updateElements] = useClassStore(
+    (state) => [
+      state.room,
+      state.createRoom,
+      state.user,
+      state.updateElements
+    ]
+  );
+
+  useEffect(()=>{
+    console.log("Inside room useEffect ",room?.roomId);
+    if(room?.roomId) navigate(`/${room?.roomId}`);
+  },[room]);
   // const [selectedTool,setSelectedTool] = useState("line");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
@@ -62,6 +79,7 @@ function WhiteBoard() {
         const elementsCopy = [...elements];
         elementsCopy[id] = updatedElement;
         setElements(elementsCopy, true);
+        updateElements(elementsCopy,room?.roomId,true);
         break;
       }
       case Tools.Pencil: {
@@ -69,6 +87,7 @@ function WhiteBoard() {
         const elementsCopy = [...elements];
         elementsCopy[id].points = [...existingPoints,{x:x2,y:y2}];
         setElements(elementsCopy, true);
+        updateElements(elementsCopy,room?.roomId,true);
         break;
       }
       case Tools.Text: {
@@ -91,6 +110,7 @@ function WhiteBoard() {
           text: options.text,
         };
         setElements(elementsCopy, true);
+        updateElements(elementsCopy,room?.roomId,true);
         break;
       }
     }
@@ -112,7 +132,6 @@ function WhiteBoard() {
     context.translate(panOffset.x*scale - scaleOffsetX,panOffset.y*scale - scaleOffsetY);
     context.scale(scale,scale);
     const roughCanvas = rough.canvas(canvas);
-    console.log(elements);
     elements.forEach((element) => {
       if(action == "writing" && selectedElement && (selectedElement.id === element.id)) return;
       drawElement(roughCanvas, context, element)
@@ -178,6 +197,10 @@ function WhiteBoard() {
         ...prevState,
         newElement
       ])); // overwrite is tured off while creating the initial point for the next shape
+      updateElements((prevState)=>([
+        ...prevState,
+        newElement
+      ]),room?.roomId);
       setSelectedElement(newElement); 
       if(tool == Tools.Text){
         setAction(Action.Writing);
@@ -186,7 +209,6 @@ function WhiteBoard() {
       }
     }else if(tool == Tools.Selection){
       const element = getElementAtPosition(clientX, clientY, elements);
-      console.log(element);
       if (element) {
         let selectedElement: SelectedElementType = { ...element };
         if((element.type == Tools.Pencil) && element.points){
@@ -200,8 +222,9 @@ function WhiteBoard() {
           setSelectedElement({ ...selectedElement, offsetX, offsetY });
         }
         setElements((prevState) => prevState); // No OverWrite means creating a copy of the current history before moving the elemnt so as to get the undo/Redo functionalites working on the Moving part and the resizing part as well
+        updateElements((prevState) => prevState,room?.roomId);
+        
         if(element.position == "inside"){
-          // console.log("Set Action Moving");
           setAction(Action.Moving);
         }else{
           setAction(Action.Resizing);
@@ -236,7 +259,6 @@ function WhiteBoard() {
       updateElement(idx, x1, y1, clientX, clientY, tool);
     }else if((action == Action.Moving) && selectedElement){
       if(selectedElement.type == Tools.Pencil && "points" in selectedElement && "xOffsets" in selectedElement && "yOffsets" in selectedElement){
-        console.log("Entered");
         const newPoints = selectedElement.points?.map((point,index)=>({
           x:clientX - selectedElement.xOffsets![index],
           y:clientY - selectedElement.yOffsets![index]
@@ -247,6 +269,7 @@ function WhiteBoard() {
           points: newPoints
         }
         setElements(elementCopy,true); // As we are moving we do not want to create a history for this so overwite = true
+        updateElements(elementCopy,room?.roomId,true);
       }else{
         const { id, x1, x2, y1, y2, type, offsetX, offsetY } = selectedElement;
         const safeOffsetX = offsetX ?? 0;
@@ -269,7 +292,6 @@ function WhiteBoard() {
         position,
         coordinates
       );
-      // console.log(type);
       updateElement(id, x1, y1, x2, y2, type);
     }
   }
@@ -326,6 +348,10 @@ function WhiteBoard() {
     resetHistory();
   } 
 
+  const handleGoLiveButton = () => {
+    createRoom(user!);
+  }
+
   const [canvasHeight,setCanvasHeight] = useState(window.innerHeight);
   const [canvasWidth,setCanvasWidth] = useState(window.innerWidth);
 
@@ -350,7 +376,20 @@ function WhiteBoard() {
       }}>
         <button onClick={handleClearButton}>Clear</button>
       </div>
-
+      <div className="actions" style={{
+        position: "fixed",
+        top: 0,
+        right: 10,
+        display: "flex",
+        gap: "10px",
+        padding: "10px",
+        background: "#f5f5f5", 
+        borderRadius: '0 0 8px 8px',
+        boxShadow: '0 1px 5px rgba(0,0,0,0.1)',
+        zIndex: 20 
+      }}>
+        <button onClick={handleGoLiveButton}>Go Live</button>
+      </div>
       <div className="toolbar gap-4" style={{ 
         position: "fixed", 
         top: 0, 
@@ -393,7 +432,6 @@ function WhiteBoard() {
           </svg>
         </button>
       </div>
-
   
       <div className="bottom-left-controls gap-8" style={{ 
         position: "fixed", 

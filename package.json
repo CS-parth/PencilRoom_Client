@@ -10,11 +10,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@firebase/auth": "^1.7.6",
+    "@firebase/firestore": "^4.6.5",
     "html-react-parser": "^5.1.12",
     "perfect-freehand": "^1.2.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.2",
     "roughjs": "^4.6.6",
+    "socket.io-client": "^4.7.5",
     "zustand": "^4.5.4",
     "zustand-persist": "^0.4.0"
   },

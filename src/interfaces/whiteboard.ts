@@ -1,18 +1,3 @@
-export type ElementType = {
-  id: number,
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number,
-  type: Tools,
-    text?: string ,
-    offsetX?: number, // conditional property
-    offsetY?: number,
-    position?: string | null,
-    points?: {x:number,y:number}[];
-    roughElement?: any
-  }
-  
   export type SelectedElementType = ElementType & {
     xOffsets?: number[];
     yOffsets?: number[]; // For pencil
@@ -20,6 +5,20 @@ export type ElementType = {
     offsetY?: number;
   };
   
+  export type ElementType = {
+    id: number,
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+    type: Tools,
+    text?: String,
+    offsetX?: number, // conditional property
+    offsetY?: number,
+    position?: string | null,
+    points?: {x:number,y:number}[];
+    roughElement?: any
+  }
   export interface ExtendedElementType extends ElementType {
     xOffsets?: number[];
     yOffsets?: number[];
@@ -42,4 +41,3 @@ export type ElementType = {
     Writing = "writing",
     Panning = "panning"
   }
-

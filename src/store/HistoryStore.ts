@@ -3,8 +3,8 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 type HistoryState = {
-  index: number
-  history: ElementType[][]
+  index: number;
+  history: ElementType[][];
 }
 
 type Actions = {
@@ -17,7 +17,7 @@ type Actions = {
 
 const initialState: HistoryState = {
   index: 0,
-  history: [[]] // limit of 15 histories only 
+  history: [[]], // limit of 15 histories only 
 }
 
 export const useHistoryStore = create<HistoryState & Actions>()(

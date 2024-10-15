@@ -1,4 +1,4 @@
-import { Tools,ElementType } from "../types";
+import { Tools,ElementType } from "../interfaces/whiteboard";
 
 export const average = (a: number, b: number): number => (a + b) / 2;
 

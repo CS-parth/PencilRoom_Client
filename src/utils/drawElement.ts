@@ -1,4 +1,4 @@
-import { Tools,ElementType } from "../types";
+import { Tools,ElementType } from "../interfaces/whiteboard";
 import getStroke from 'perfect-freehand'
 import { average } from "./math";
 

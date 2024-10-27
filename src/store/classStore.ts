@@ -13,7 +13,7 @@ interface ClassState {
     // typed: string;
     // userProgress: Progress | null;
     updateUser: (socketId: string) => void;
-    createRoom: (user: User) => void;
+    createRoom: (user: User,elements: ElementType[]) => void;
     joinRoom: (roomId: string, user: User) => ElementType[];
     exitRoom: () => void;
     updateRoom: (room: Room) => void;
@@ -57,8 +57,8 @@ const useClassStore = create<ClassState>()(
             updateElements: async (action,roomId, overwrite=false) => {
                 socket.emit('updateElements',action,roomId,overwrite);
             },
-            createRoom: async (user) => {
-                socket.emit('createRoom',user,""!, (res) => {
+            createRoom: async (user,elements) => {
+                socket.emit('createRoom',user,""!,elements, (res) => {
                     if(res.success == true){
                         set({
                             room: res.data
@@ -70,15 +70,15 @@ const useClassStore = create<ClassState>()(
             joinRoom: (roomId, user) => {
                 return new Promise<ElementType[]>((resolve, reject) => {
                     set({ loading: 'Joining the room! Please Wait....' });
-            
+                    
                     socket.emit('joinRoom', roomId, user, (res) => {
                         set({ loading: null });
-            
                         if (res.success === false) {
                             set({ error: res.error });
                             reject(res.error);
                         } else {
                             console.log(res.data);
+                            set({room: {roomId,elements:res.data}});
                             resolve(res.data); 
                         }
                     });

@@ -1,5 +1,6 @@
 // import { GameDifficulties, GameDuration, GameModes } from './game';
 import { User } from './user';
+import { ElementType } from './whiteboard';
 
 // export interface GameSettings {
 //   mode: GameModes;
@@ -30,6 +31,7 @@ export interface Room {
 //   }[];
 //   gameSettings: GameSettings;
   status?: RoomStatus;
+  elements: ElementType[];
   createdAt?: Date;
   timer?: number;
 }

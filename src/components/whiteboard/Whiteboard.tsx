@@ -29,6 +29,8 @@ function WhiteBoard({roomId,socketId}) {
     console.log("Inside room useEffect ",room?.roomId);
     if(room?.roomId) navigate(`/${room?.roomId}`);
   },[room]);
+  
+
   // const [selectedTool,setSelectedTool] = useState("line");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
@@ -346,10 +348,13 @@ function WhiteBoard({roomId,socketId}) {
   const handleClearButton = () => {
     resetTools();
     resetHistory();
+    if(room?.roomId){
+      updateElements([],roomId)
+    }
   } 
 
   const handleGoLiveButton = () => {
-    createRoom(user!);
+    createRoom(user!,elements);
   }
 
   const [canvasHeight,setCanvasHeight] = useState(window.innerHeight);
@@ -358,7 +363,6 @@ function WhiteBoard({roomId,socketId}) {
   const onZoom = (val:number) => {
     setScale(prevState => Math.min(Math.max(prevState + val,0.1),2));
   }
-
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
       
@@ -380,13 +384,13 @@ function WhiteBoard({roomId,socketId}) {
         position: "fixed",
         top: 0,
         right: 10,
-        display: "flex",
+        display: 'flex',
         gap: "10px",
         padding: "10px",
         background: "#f5f5f5", 
         borderRadius: '0 0 8px 8px',
         boxShadow: '0 1px 5px rgba(0,0,0,0.1)',
-        zIndex: 20 
+        zIndex: 20,
       }}>
         <button onClick={handleGoLiveButton}>Go Live</button>
       </div>

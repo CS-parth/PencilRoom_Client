@@ -23,6 +23,7 @@ export interface ClientToServerEvents {
   createRoom: (
     user: User,
     settings: ClassSettings,
+    elements: ElementType[],
     callback: (res: Response<Room>) => void
   ) => void;
 

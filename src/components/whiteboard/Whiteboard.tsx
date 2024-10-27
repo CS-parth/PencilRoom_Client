@@ -363,6 +363,7 @@ function WhiteBoard({roomId,socketId}) {
   const onZoom = (val:number) => {
     setScale(prevState => Math.min(Math.max(prevState + val,0.1),2));
   }
+  console.log(room?.roomId);
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
       
@@ -478,8 +479,14 @@ function WhiteBoard({roomId,socketId}) {
           name="text"
           style={{
             position: "fixed",
-            top: selectedElement?.y1 ? `${selectedElement.y1 * scale + panOffset.x * scale - scaleOffset.x}px` : '0',
-            left: selectedElement?.x1 ? `${selectedElement.x1 * scale + panOffset.y * scale - scaleOffset.y}px` : '0',
+            top: selectedElement
+              ? (selectedElement.y1 - 2) * scale +
+                panOffset.y * scale -
+                scaleOffset.y
+              : 0,
+            left: selectedElement
+              ? selectedElement.x1 * scale + panOffset.x * scale - scaleOffset.x
+              : 0,
             font: `${24 * scale}px sans-serif`,
             margin: 0,
             padding: 0,

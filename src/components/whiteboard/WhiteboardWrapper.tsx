@@ -75,7 +75,6 @@ const WhiteboardWrapper = () => {
         console.log("RoomId ", roomId);
         if (roomId && !hasJoinedRoom.current && user.socketId) {
             console.log("roomId from params", roomId);
-            
             try {
                 const elements = await joinRoom(roomId, user);
                 localStorage.removeItem('pencilRoom_history');

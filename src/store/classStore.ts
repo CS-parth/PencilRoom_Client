@@ -70,15 +70,15 @@ const useClassStore = create<ClassState>()(
             joinRoom: (roomId, user) => {
                 return new Promise<ElementType[]>((resolve, reject) => {
                     set({ loading: 'Joining the room! Please Wait....' });
-            
+                    
                     socket.emit('joinRoom', roomId, user, (res) => {
                         set({ loading: null });
-            
                         if (res.success === false) {
                             set({ error: res.error });
                             reject(res.error);
                         } else {
                             console.log(res.data);
+                            set({room: {roomId,elements:res.data}});
                             resolve(res.data); 
                         }
                     });

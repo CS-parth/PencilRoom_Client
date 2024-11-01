@@ -6,3 +6,9 @@ body{
   padding: 0;
   box-sizing: border-box;
 }
+@font-face {
+  font-family: 'Pacifico';
+  src: url('src/assets/JetBrains_Mono,Pacifico/Pacifico/Pacifico-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}

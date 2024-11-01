@@ -6,14 +6,17 @@ import {
   RouterProvider,
   Route
 } from "react-router-dom";
+import '@mantine/core/styles.css';
 // import WhiteBoard from './components/whiteboard/Whiteboard';
 import WhiteboardWrapper from './components/whiteboard/WhiteboardWrapper';
+import Landing from './components/landing/Landing';
 const router = createBrowserRouter(
   createRoutesFromElements(
     <>
       <Route path="/">
-        <Route index element={<WhiteboardWrapper />} />
-        <Route path=':roomId' element={<WhiteboardWrapper />} />
+        <Route index element={<Landing />} />
+        <Route path='/board' element={<WhiteboardWrapper />} />
+        <Route path='/board/:roomId' element={<WhiteboardWrapper />} />
       </Route>
     </>
   )

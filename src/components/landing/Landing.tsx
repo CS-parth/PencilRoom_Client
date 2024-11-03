@@ -4,76 +4,94 @@ import ShadowImage from '../../../public/Shadow.png'
 import MagicWrire from './MagicWrite';
 import { motion } from "framer-motion";
 import '../../assets/font.css'
+
 const Landing = () => {
   return (
-    <motion.div style={{fontFamily: 'Pacifico'}} className="max-w-screen min-h-screen flex flex-col bg-gradient-to-tr from-black to-white transition-colors duration-800">
-      {/* <Box bg="var(--mantine-color-blue-light)">All elements inside Center are centered</Box> */}
+    <motion.div 
+      style={{fontFamily: 'Pacifico'}} 
+      className="min-h-screen flex flex-col bg-gradient-to-tr from-black to-white transition-colors duration-800"
+    >
       <div className="flex flex-col min-h-screen">
-        <nav className="flex flex-col lg:flex-row mx-5 mt-2 mb-4 sm:mt-5 sm:mb-20 sm:mx-auto w-3/4 items-center xl:m-10">
-          <div style={{fontFamily:'Dirty_Boy'}} className="text-2xl mx-4 sm:mx-40 sm:text-[50px] md:text-[70px] sm:m-10 font-extrabold">PencilRoom</div>
+        {/* Navigation */}
+        <nav className="flex flex-col lg:flex-row justify-between items-center w-11/12 mx-auto py-4 lg:py-8">
+          <div 
+            style={{fontFamily:'Dirty_Boy'}} 
+            className="text-2xl lg:text-5xl xl:text-6xl font-extrabold mb-4 lg:mb-0"
+          >
+            PencilRoom
+          </div>
           <div>
-            <ul className="gap-x-4 text-sm flex xl:gap-x-10 sm:text-lg lg:text-xl">
-              <li>Contact</li>
-              <li>About</li>
-              <li>Source Code</li>
+            <ul className="flex space-x-4 lg:space-x-8 text-sm lg:text-base xl:text-lg">
+              <li className="hover:opacity-80 cursor-pointer">Contact</li>
+              <li className="hover:opacity-80 cursor-pointer">About</li>
+              <li className="hover:opacity-80 cursor-pointer">Source Code</li>
             </ul>
           </div>
         </nav>
-        <div className="hero flex my-auto">
-          <div className="flex flex-col hero-content m-5 xl:m-auto gap-y-20">
-            <MagicWrire text={"This is the major content on the site"}/>
-            <Container className="">              
-              <Button className="h-6 w-20 p-0 text-xs m-2 sm:h-10 sm:w-40 md:text-xl xl:p-2 xl:h-[50px] xl:w-[250px] xl:text-2xl">Create a Board</Button>
-              <Button className="h-6 w-20 p-0 text-xs m-2 sm:h-10 sm:w-40 md:text-xl xl:p-2 xl:h-[50px] xl:w-[250px] xl:text-2xl">Join a Board</Button>
-            </Container>
-          </div>
-            <div className="relative w-full sm:max-w-[300px] xl:max-w-[350px] sm:ml-[200px] aspect-[7/6] m-5 xl:m-auto">
-              <motion.div
-                className="absolute inset-0 flex items-center justify-center"
-                transition={{
-                  y: {
-                    duration: 1,
-                    repeat: Infinity,
-                    repeatType: 'reverse',
-                    ease: "easeOut",
-                  },
-                }}
-                animate={{
-                  y: ["0%", "-20%"],  // Reduced bounce height for more stability
-                }}
-              >
-                <img 
-                  className="w-full h-auto object-contain" 
-                  src={whitehoardImage} 
-                  alt="Whiteboard"
-                />
-              </motion.div>
 
-              <motion.div
-                className="hidden sm:block absolute left-1/2 -translate-x-1/2 bottom-[20%] w-[40%] md:bottom-[10%] lg:bottom-[0%] xl:bottom-[-10%]"
-                transition={{
-                  scaleX: { 
-                    duration: 1,
-                    repeat: Infinity,
-                    repeatType: 'reverse',
-                    ease: "easeOut"
-                  }
-                }}
-                animate={{ 
-                  scaleX: [0.5, 1.5]  // Reduced scale range for more stability
-                }}
-              >
-                <img 
-                  className="w-full h-auto"
-                  src={ShadowImage} 
-                  alt="Shadow"
-                />
-              </motion.div>
+        {/* Main Content */}
+        <div className="flex flex-col lg:flex-row items-center justify-center flex-grow w-11/12 mx-auto gap-8 lg:gap-16">
+          {/* Left Content */}
+          <div className="flex flex-col w-full lg:w-1/2 space-y-8">
+            <MagicWrire text={"This is the major content on the site"}/>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center sm:justify-start">              
+              <Button className="w-full sm:w-auto px-6 py-2 text-sm lg:text-base xl:text-lg">
+                Create a Board
+              </Button>
+              <Button className="w-full sm:w-auto px-6 py-2 text-sm lg:text-base xl:text-lg">
+                Join a Board
+              </Button>
             </div>
+          </div>
+
+          {/* Right Content - Image */}
+          <div className="relative w-full lg:w-1/2 max-w-md aspect-[7/6]">
+            <motion.div
+              className="absolute inset-0 flex items-center justify-center"
+              transition={{
+                y: {
+                  duration: 1,
+                  repeat: Infinity,
+                  repeatType: 'reverse',
+                  ease: "easeOut",
+                },
+              }}
+              animate={{
+                y: ["-5%", "-20%"],
+              }}
+            >
+              <img 
+                className="w-full h-auto object-contain" 
+                src={whitehoardImage} 
+                alt="Whiteboard"
+              />
+            </motion.div>
+
+            <motion.div
+              className="hidden sm:block absolute left-1/2 -translate-x-1/2 bottom-0 w-2/5"
+              transition={{
+                scaleX: { 
+                  duration: 1,
+                  repeat: Infinity,
+                  repeatType: 'reverse',
+                  ease: "easeOut"
+                }
+              }}
+              animate={{ 
+                scaleX: [0.5, 1.8]
+              }}
+            >
+              <img 
+                className="w-full h-auto"
+                src={ShadowImage} 
+                alt="Shadow"
+              />
+            </motion.div>
+          </div>
         </div>
       </div>
     </motion.div>
-  )
+  );
 }
 
 export default Landing

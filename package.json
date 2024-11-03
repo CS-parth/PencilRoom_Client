@@ -14,6 +14,7 @@
     "@firebase/firestore": "^4.6.5",
     "@mantine/core": "^7.13.4",
     "@mantine/hooks": "^7.13.4",
+    "@mantine/spotlight": "^7.13.4",
     "framer-motion": "^11.11.10",
     "html-react-parser": "^5.1.12",
     "perfect-freehand": "^1.2.2",

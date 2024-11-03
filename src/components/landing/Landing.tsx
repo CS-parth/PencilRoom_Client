@@ -4,7 +4,7 @@ import whitehoardImage from '../../../public/Whiteboard.png'
 import ShadowImage from '../../../public/Shadow.png'
 import MagicWrire from './MagicWrite';
 import { motion } from "framer-motion";
-import '../../assets/font.css'
+import "../../assets/font.css"
 import { Link } from "react-router-dom";
 import { useState } from "react";
 
@@ -15,7 +15,7 @@ const Landing = () => {
   return (
     <motion.div 
       style={{
-        fontFamily: 'Pacifico',
+        fontFamily: "Pacifico",
         background: 'linear-gradient(135deg, #2c3e50, #bdc3c7)',
         position: 'relative',
         overflow: 'hidden'
@@ -66,7 +66,7 @@ const Landing = () => {
       <div className="flex flex-col min-h-screen relative z-10">
         <nav className="flex flex-col lg:flex-row justify-between items-center w-11/12 mx-auto py-4 lg:py-8">
           <div 
-            style={{fontFamily:'Dirty_Boy'}} 
+            style={{fontFamily:"Dirty_Boy"}} 
             className="text-2xl lg:text-5xl xl:text-6xl font-extrabold mb-4 lg:mb-0"
           >
             PencilRoom

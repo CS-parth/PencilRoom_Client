@@ -3,4 +3,16 @@
     src: url('src/assets/JetBrains_Mono,Pacifico/Pacifico/Pacifico-Regular.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
-  }
+}
+
+@font-face {
+  font-family: 'Autumn_In_November';
+  src: url('src/assets/autumn-in-november/Autumn in November.ttf') format('truetype');
+  font-weight: bold;
+}
+
+@font-face {
+  font-family: 'Dirty_Boy';
+  src: url('src/assets/dirtyboy-font/Dirtyboy-BxYl.ttf') format('truetype');
+  font-weight: bold;
+}

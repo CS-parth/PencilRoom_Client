@@ -478,6 +478,7 @@ function WhiteBoard({roomId,socketId}) {
           ref={textareaRef}
           name="text"
           style={{
+            fontFamily: "cursive",
             position: "fixed",
             top: selectedElement
               ? (selectedElement.y1 - 2) * scale +

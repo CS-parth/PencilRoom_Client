@@ -17,8 +17,8 @@ const MagicWrite = (props) => {
   
   return (
     <>
-      <Container>
-          <div className='font-extrabold text-6xl' ref={ref}></div>
+      <Container className='lg:mx-0'>
+          <div className='m-0 p-0 text-xl sm:text-2xl lg:text-3xl font-extrabold' ref={ref}></div>
       </Container>
     </>
   )

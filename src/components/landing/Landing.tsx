@@ -6,12 +6,39 @@ import MagicWrire from './MagicWrite';
 import { motion } from "framer-motion";
 import "../../assets/font.css"
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { socket } from "../../utils/socket";
+import useClassStore from '../../store/classStore';
 
 const Landing = () => {
   const [opened, { open, close }] = useDisclosure(false);
   const [roomId, setRoomId] = useState<string>();
   
+  const socketId = "";
+
+  const [updateUser] = useClassStore(
+    (state) => [
+      state.updateUser,
+    ]
+  );
+
+  useEffect(()=>{
+    
+    socket.on('updateUser',(socketId) => {
+      updateUser(socketId);
+      socketId = socketId;
+      // store in localStorage if not alreay stored 
+      const storedId = localStorage.getItem('socketId');
+      if(!storedId){
+        localStorage.setItem('socketId',socketId);
+      }
+    })
+
+    return () => {
+      socket.off('updateUser');
+    }
+  },[]);
+
   return (
     <motion.div 
       style={{

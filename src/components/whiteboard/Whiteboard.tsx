@@ -27,7 +27,7 @@ function WhiteBoard({roomId,socketId}) {
 
   useEffect(()=>{
     console.log("Inside room useEffect ",room?.roomId);
-    if(room?.roomId) navigate(`/${room?.roomId}`);
+    if(room?.roomId) navigate(`/board/${room?.roomId}`);
   },[room]);
   
 

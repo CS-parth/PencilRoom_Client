@@ -27,19 +27,9 @@ const WhiteboardWrapper = () => {
     const [params] = useSearchParams();
     const navigate = useNavigate();
     const hasJoinedRoom = useRef(false);
-    const socketId = "";
 
     //Socket Events
     useEffect(() => {
-      socket.on('updateUser',(socketId) => {
-        updateUser(socketId);
-        socketId = socketId;
-        // store in localStorage if not alreay stored 
-        const storedId = localStorage.getItem('socketId');
-        if(!storedId){
-          localStorage.setItem('socketId',socketId);
-        }
-      })
 
       socket.on('updateRoom', (room) => {
         updateRoom(room);
@@ -73,6 +63,9 @@ const WhiteboardWrapper = () => {
     useEffect(() => {
       (async () => {
         console.log("RoomId ", roomId);
+        console.log(roomId);
+        console.log(!hasJoinedRoom.current);
+        console.log(user.socketId);
         if (roomId && !hasJoinedRoom.current && user.socketId) {
             console.log("roomId from params", roomId);
             try {
@@ -89,7 +82,7 @@ const WhiteboardWrapper = () => {
     
     return (
         <div>
-            <WhiteBoard roomId={roomId} socketId={socketId}/>
+            <WhiteBoard roomId={roomId} socketId={user.socketId} />
         </div>
     )
 }

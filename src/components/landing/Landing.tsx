@@ -100,9 +100,9 @@ const Landing = () => {
           </div>
           <div>
             <ul className="flex space-x-4 lg:space-x-8 text-sm lg:text-base xl:text-lg">
-              <li className="hover:opacity-80 cursor-pointer">Contact</li>
-              <li className="hover:opacity-80 cursor-pointer">About</li>
-              <li className="hover:opacity-80 cursor-pointer">Source Code</li>
+              <li className="hover:opacity-80 cursor-pointer"><a href="https://www.linkedin.com/in/parth-vijay-672bb9251/">Contact</a></li>
+              <li className="hover:opacity-80 cursor-pointer"><a href="https://github.com/CS-parth">Github</a></li>
+              <li className="hover:opacity-80 cursor-pointer"><a href="https://github.com/CS-parth/PencilRoom_Client">Source Code</a></li>
             </ul>
           </div>
         </nav>
